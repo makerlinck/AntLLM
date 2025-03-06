@@ -1,39 +1,28 @@
-import os
+# 程序主入口 TODO:文件读写健壮性检查
+from pathlib import Path
 
-fix_format = {
+from langchain.output_parsers import StructuredOutputParser
+from data.constant.response_schemas import response_schemas
+from data.constant.prompt import classifier_prompt
+from dd_viewer import get_evaluation
+from bin.utils.model_provider import initialize_classifier_llm
+from bin.utils.executor.file_manager import FileManager
 
-}
-class WorkDirManager:
+alice = FileManager()
+work_dir = alice.work_dir
+orig_dir = alice.origin_dir
+output_dir = alice.output_dir
 
-    def __init__(self):
-        self.work_dir = os.path.dirname(os.getcwd())    # 获取主程序工作目录
-        self.origin_dir = self.touch_dir("origin")
-        self.output_dir = self.touch_dir("output")
-        self.cache_dir = self.touch_dir("caches")
-        print("init work root dir:", self.work_dir)
+parser = StructuredOutputParser.from_response_schemas(response_schemas)
+chain = classifier_prompt | initialize_classifier_llm | parser
 
-    def touch_dir(self, fold_name):
-        """
-        获取/创建指定目录
-        :param fold_name: 目标文件夹名称
-        :return: 完整目录路径
-        """
-        target_dir = os.path.join(self.work_dir, fold_name)
+if __name__ == "__main__":
+    for img_path in alice.get_origin_files(recursive=True):
+        print(f"{img_path}")
+        img_keywords = get_evaluation([img_path])
+        response = chain.invoke({"query": f"图片内容描述关键词:{img_keywords}"})
+        print(response.get("think"))
+        print(response.get("class"))
+        print(response.get("keyword"))
+        alice.move_file(Path(img_path), response.get("class", "other"))
 
-        if not os.path.exists(target_dir):
-            os.makedirs(target_dir, exist_ok=True)  # 自动创建多级目录
-            print(f"已创建目录: {target_dir}")
-        else:
-            print(f"目录已存在: {target_dir}")
-
-        return target_dir
-    def get_origin_files(self):
-        """
-        获取origin目录下的所有文件，并返回（文件名列表），若列表内存在哈希值相同文件则重命名
-        :return:
-        """
-        files = os.listdir(self.origin_dir)
-        return files
-    pass
-
-alice = WorkDirManager()
