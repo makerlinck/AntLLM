@@ -5,6 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/origin" />
       <excludeFolder url="file://$MODULE_DIR$/output" />
+      <excludeFolder url="file://$MODULE_DIR$/data/deepdanbooru_v4e30" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11 (AntOllama)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
