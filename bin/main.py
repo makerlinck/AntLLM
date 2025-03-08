@@ -1,6 +1,4 @@
-# 程序主入口 TODO:文件读写健壮性检查
-from pathlib import Path
-
+# 程序主入口
 from langchain.output_parsers import StructuredOutputParser
 from data.constant.response_schemas import response_schemas
 from data.constant.prompt import classifier_prompt
@@ -17,12 +15,14 @@ parser = StructuredOutputParser.from_response_schemas(response_schemas)
 chain = classifier_prompt | initialize_classifier_llm | parser
 
 if __name__ == "__main__":
+    imgs = []
     for img_path in alice.get_origin_files(recursive=True):
         print(f"{img_path}")
-        img_keywords = get_evaluation([img_path])
-        response = chain.invoke({"query": f"图片内容描述关键词:{img_keywords}"})
-        print(response.get("think"))
-        print(response.get("class"))
-        print(response.get("keyword"))
-        alice.move_file(Path(img_path), response.get("class", "other"))
+        imgs.append(img_path)
+    img_keywords = get_evaluation(imgs)
+    # response = chain.invoke({"query": f"图片内容描述关键词:{img_keywords}"})
+    # print(response.get("think"))
+    # print(response.get("class"))
+    # print(response.get("keyword"))
+    # alice.move_file(Path(img_path), response.get("class", "other"))
 

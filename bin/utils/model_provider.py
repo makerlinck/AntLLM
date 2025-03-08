@@ -18,4 +18,4 @@ def initialize_v_llm(model:str):
     )
 
 initialize_viewer_llm = initialize_v_llm(model ="llava:13b")
-initialize_classifier_llm = initialize_llm(model ="qwen2.5-coder:7b")
+initialize_classifier_llm = initialize_llm(model ="qwen2.5:3b")
