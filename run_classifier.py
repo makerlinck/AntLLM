@@ -1,22 +1,19 @@
 # 程序主入口
 from langchain.output_parsers import StructuredOutputParser
+
+from bin.file_manager import fm
 from data.constant.response_schemas import response_schemas
 from data.constant.prompt import classifier_prompt
-from dd_viewer import get_evaluation
-from bin.utils.model_provider import initialize_classifier_llm
-from bin.utils.executor.file_manager import FileManager
-
-alice = FileManager()
-work_dir = alice.work_dir
-orig_dir = alice.origin_dir
-output_dir = alice.output_dir
-
+from bin.image_viewer import get_evaluation
+from data.constant.model_provider import initialize_classifier_llm
 parser = StructuredOutputParser.from_response_schemas(response_schemas)
 chain = classifier_prompt | initialize_classifier_llm | parser
-
+work_dir = fm.work_dir
+origin_dir = fm.origin_dir
+output_dir = fm.output_dir
 if __name__ == "__main__":
     imgs = []
-    for img_path in alice.get_origin_files(recursive=True):
+    for img_path in fm.get_origin_files(recursive=True):
         print(f"{img_path}")
         imgs.append(img_path)
     img_keywords = get_evaluation(imgs)
