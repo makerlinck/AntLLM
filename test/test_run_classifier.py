@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from langchain.output_parsers import StructuredOutputParser
-from bin.file_manager import fm
+from app.file_manager import fm
 from data.constant.response_schemas import response_schemas
 from data.constant.prompt import classifier_prompt
 from data.constant.model_provider import initialize_classifier_llm

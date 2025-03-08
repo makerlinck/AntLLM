@@ -1,5 +1,5 @@
-from bin.file_manager import fm
-from bin.image_viewer import get_evaluation
+from app.file_manager import fm
+from app.image_viewer import get_evaluation
 
 def run_deepmini():
     imgs = []

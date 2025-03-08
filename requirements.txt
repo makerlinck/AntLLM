@@ -10,3 +10,6 @@ scipy~=1.15.2
 requests~=2.32.3
 click~=8.1.8
 typing_extensions~=4.12.2
+
+fastapi~=0.115.11
+uvicorn~=0.34.0

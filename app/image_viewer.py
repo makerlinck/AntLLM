@@ -2,8 +2,8 @@ import base64
 from io import BytesIO
 from pathlib import Path
 from PIL import Image
-from bin.deepmini import evaluate
-from bin.file_manager import fm
+from app.deepmini import evaluate
+from app.file_manager import fm
 from data.constant.model_provider import initialize_viewer_llm
 from data.constant.prompt import viewer_prompt
 def get_evaluation(target_paths:list[Path]):

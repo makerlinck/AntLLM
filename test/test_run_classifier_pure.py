@@ -1,5 +1,5 @@
 # 程序主入口
-from bin.file_manager import fm
+from app.file_manager import fm
 from test_run_deepmini import run_deepmini
 
 
