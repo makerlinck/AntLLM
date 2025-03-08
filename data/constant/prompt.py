@@ -14,23 +14,20 @@ viewer_prompt = PromptTemplate.from_template(
     """
 )
 image_class = [
-    ["adult_anime(包含明显的裸露/成人/性爱内容等)"],
-    ["sexy_content(包含性暗示或者部分裸露内容)"],
-    ["anime_illustration(正常的日式插画内容)"],
-    ["photo(照片)"],
+    ["nsfw_anime(包含明显的暴露/成人/性爱内容等)"],
+    ["sexy_anime(包含性暗示或者部分裸露内容)"],
+    ["sfw_anime(正常的日式插画内容)"],
     ["other(其他)"]
 ]
 classifier_prompt = PromptTemplate.from_template(
-    f"你是一位经验丰富的图片分类专家，你的任务是根据给定的类别对图片进行准确分类。请严格按照以下类别标准执行分类工作：{str(image_class)}。"
+    f"你是一位经验丰富的插画分类专家，你的任务是根据给定的类别对图片进行准确分类。请严格按照以下类别标准执行分类工作：{str(image_class)}。"
     """
     任务指令：选择合适的分类并返回，输出JSON格式结果
     请严格按照以下格式执行：
     [
-        "think":    "content":"(分析图片关键词的过程,详细,使用中文回复)",
         "class":    "(图片类别)"
     ]
     现在请分类以下图片，该图片关键词为:
-    -----------------------
     {query}
     """
 )

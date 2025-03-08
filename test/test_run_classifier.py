@@ -21,3 +21,5 @@ if __name__ == "__main__":
         type(img_path)
         img_keywords = content["img_tags"]
         fm.move_file(img_path, response.get("class", "other"))
+        print(type(img_path))
+#

@@ -117,7 +117,7 @@ def evaluate(
     for image_path in target_image_paths:
         print(f"Tags of {image_path}:") #yup!
         tag_list = [list[str, float]]
-        for tag, score in evaluate_image(image_path, model, tags, threshold):
+        for tag, score in evaluate_image(image_path.as_posix(), model, tags, threshold):
             print(f"tag:{tag} score:({score:05.3f})")
             tag_list.append([str(tag),float(score)])
         yield {"img_path": image_path, "img_tags": tag_list}
