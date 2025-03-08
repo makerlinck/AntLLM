@@ -38,7 +38,7 @@ $ wget https://github.com/KichangKim/DeepDanbooru/releases/download/v4-20200814-
 ### 基本使用 | Basic Usage
 ```bash
 
-$ python ./bin/run_classifier.py
+$ python ./bin/test_run_deepmini.py
 #在第一次运行以后默认会在工作目录产生origin和output文件夹，origin文件夹为原始图片，output文件夹为自动分类后的图片。
 # 将原始图片放入origin文件夹中，再次运行即可自动进行分类。
 ```

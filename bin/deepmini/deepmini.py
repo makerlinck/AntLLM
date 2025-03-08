@@ -104,20 +104,20 @@ def evaluate(
     project_path:Path,
     threshold:float = 6.18,
     allow_gpu:bool = True,
-):
+) -> Iterable[dict]:
     if not allow_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-    model_path = os.path.join(project_path, "model-resnet_custom_v4.h5")
+    model_path = project_path / "model-resnet_custom_v4.h5"
+    if not model_path.exists():
+        raise Exception("h5 Model file not found. Please Check!")
     model = tf.keras.models.load_model(model_path, compile=False)
 
     tags = load_tags_from_project(project_path)
-    img_tags = {str:list}
     for image_path in target_image_paths:
         print(f"Tags of {image_path}:") #yup!
         tag_list = [list[str, float]]
         for tag, score in evaluate_image(image_path, model, tags, threshold):
             print(f"tag:{tag} score:({score:05.3f})")
             tag_list.append([str(tag),float(score)])
-        img_tags.update({image_path:tag_list})
-    return img_tags
+        yield {"img_path": image_path, "img_tags": tag_list}
