@@ -1,0 +1,1 @@
+from .deepmini import vision_pipeline

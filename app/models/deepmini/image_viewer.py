@@ -3,23 +3,11 @@ from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
-from .deepmini import evaluate
+from .vision_pipeline import evaluate
 from app.utils import fm
 from app.models.deepmini.model_provider import initialize_viewer_llm
 from app.utils.constant.prompt import viewer_prompt
-def aget_evaluation(
-        target_paths:list[ Path | str ],
-        return_path:bool = False,
-) -> [dict[str, str | Path | list[tuple[str, float]]], None, None]:
-
-    return evaluate(
-        target_image_paths= target_paths,
-        project_path= fm.work_dir / "data" / "tagger_model",
-        threshold= 0.618,
-        allow_gpu= False,
-        return_path=return_path
-    )
-def vision_pipeline(image_path:Path):
+def vision_llm(image_path:Path):
     # 1. 图像编码
     with Image.open(image_path) as img:
         width, height = img.size
@@ -42,7 +30,7 @@ def get_image_content(image_path:Path) -> str:
     获取图像内容的文字描述
     :param image_path: 图像文件路径:Path
     """
-    response = vision_pipeline(
+    response = vision_llm(
         image_path=image_path,
     )
     print(f"\033[32m {response} \033[0m")
