@@ -1,7 +1,8 @@
 import os, six, math, skimage.transform
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple, Union
+from typing import Any, Iterable, List, Tuple, Union, Generator
 import tensorflow as tf, tensorflow_io as tfio
+
 def load_tags(tags_path):
     with open(tags_path, "r") as tags_stream:
         tags = [tag for tag in (tag.strip() for tag in tags_stream) if tag]
@@ -50,7 +51,7 @@ def transform_and_pad_image(
     warp_shape = (target_height, target_width)
 
     image_array = skimage.transform.warp(
-        image_array, (t).inverse, output_shape=warp_shape, order=order, mode=mode
+        image_array, t.inverse, output_shape=warp_shape, order=order, mode=mode
     )
 
     return image_array
@@ -99,12 +100,14 @@ def evaluate_image(
     for tag in tags:
         if result_dict[tag] >= threshold:
             yield tag, result_dict[tag]
+
 def evaluate(
-    target_image_paths:list[Path], #this
+    target_image_paths:list[Path|str], #this
     project_path:Path,
     threshold:float = 6.18,
     allow_gpu:bool = True,
-) -> Iterable[dict]:
+    return_path:bool = False,
+) -> Generator[dict[str, str | Path | list[tuple[str, float]]], None, None]:
     if not allow_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -115,9 +118,18 @@ def evaluate(
 
     tags = load_tags_from_project(project_path)
     for image_path in target_image_paths:
-        print(f"Tags of {image_path}:") #yup!
-        tag_list = [list[str, float]]
-        for tag, score in evaluate_image(image_path.as_posix(), model, tags, threshold):
-            print(f"tag:{tag} score:({score:05.3f})")
-            tag_list.append([str(tag),float(score)])
-        yield {"img_path": image_path, "img_tags": tag_list}
+        if type(image_path) == str:
+            image_path = Path(image_path)
+        if image_path.exists():
+            print(f"Tags of {image_path}:")  # yup!
+            tag_list = [list[str, float]]
+            for tag, score in evaluate_image(image_path.as_posix(), model, tags, threshold):
+                print(f"tag:{tag} score:({score:05.3f})")
+                tag_list.append((str(tag), round(float(score),4)))
+            if not return_path:
+                image_path = str(image_path.as_posix())
+            yield {
+                "img_path": image_path,
+                "img_tags": tag_list
+            }
+

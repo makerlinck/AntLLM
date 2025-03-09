@@ -1,13 +1,18 @@
 import shutil
 from pathlib import Path
 from typing import Generator
-
+from app.core import config_glob
 import yaml as yml
 
 class FileManager:
 
     def __init__(self):
-        self.work_dir = Path(__file__).resolve().parent.parent
+        self.work_dir = Path(__file__).resolve().parents[2]
+
+        # 检查工作目录，避免错误导致多余目录创建
+        if not self.work_dir.name == config_glob.app_name:
+            raise RuntimeError("工作目录不正确，请检查工作目录")
+
         self.user_dir = Path.home()
         self.origin_dir = self.touch_dir("origin")
         self.output_dir = self.touch_dir("output")
@@ -30,6 +35,7 @@ class FileManager:
         生成器函数，递归查找指定目录下的所有文件
         :param recursive:是否递归查询该目录
         """
+        # 定义匹配模式(图片)
         pattern = "**/*.[pPjJwWgGbBtT][nNpPeEgGaAfF][gGpPeEfFmM]*" if recursive else "*.[pPjJwWgGbBtT][nNpPeEgGaAfF][gGpPeEfFmM]*"
         for path in self.origin_dir.glob(pattern):
             if path.is_file() and not path.name.startswith(('~$', '.')):
@@ -51,3 +57,5 @@ class FileManager:
         return True
 
 fm = FileManager()
+if __name__ == "__main__":
+    print(fm.work_dir)

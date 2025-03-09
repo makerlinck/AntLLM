@@ -1,15 +1,19 @@
-langchain-core~=0.3.41
+requests~=2.32.3
+
 pillow~=11.1.0
+tensorflow~=2.18.0
+langchain-core~=0.3.41
 langchain~=0.3.20
+
 PyYAML~=6.0.2
 six~=1.17.0
-tensorflow~=2.18.0
 numpy~=2.0.2
 scikit-image~=0.25.2
 scipy~=1.15.2
-requests~=2.32.3
 click~=8.1.8
+
 typing_extensions~=4.12.2
+pydantic~=2.10.6
 
 fastapi~=0.115.11
 uvicorn~=0.34.0
