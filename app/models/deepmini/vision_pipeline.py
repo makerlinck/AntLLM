@@ -1,5 +1,4 @@
 import os, six, math, skimage.transform
-from gettext import find
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, Union, Generator
 import tensorflow as tf, tensorflow_io as tfio
@@ -97,7 +96,7 @@ def evaluate_image(
 
     key_active ,ratings = [], []
     keys_with_weight = "cum nude anus pussy censored mosaic_censoring ejaculation fellatio imminent_rape imminent_sex imminent_vaginal nipples breasts clitoris urethra uncensored naked no_panties".split(" ")
-    keys_ban = "nude anus pussy ejaculation penis naked".split(" ")
+    keys_ban = "nude anus pussy ejaculation penis naked nipples".split(" ")
     # 过滤置信度低的 Tag; 过滤所有 Charactor-Tags; 保留最后一个分级Tag
     for tag in tags:
         if not (5888 < result_dict[tag][0] < len(tags)) and result_dict[tag][1] >= threshold:
@@ -152,7 +151,7 @@ def evaluate(
             img_tags = []
             for tag, score in evaluate_image(image_path.as_posix(), model, tags, THRESHOLD):
                 if verbose:print(f"tag:{tag} score:({score:05.3f})")
-                img_tags.append((str(tag), round(float(score),4)))
+                img_tags.append(tag)
             if not is_return_path:
                 image_path = str(image_path.as_posix())
             yield TagItem(img_path=image_path, img_tags=img_tags)

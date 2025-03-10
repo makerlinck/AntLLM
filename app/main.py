@@ -1,7 +1,8 @@
 from fastapi import FastAPI, APIRouter
+
+from app.models.deepmini import vision_pipeline
 from app.schemas import tagger
 from app.core import config_glob
-from app.models import
 
 app = FastAPI()
 
@@ -11,16 +12,14 @@ router = APIRouter(
 )
 
 @router.post("/tagger/", response_model=tagger.TaggerResponse)
-async def tag_files(body: tagger.TaggerForm):
+async def tagging_images(body: tagger.TaggerQueryForm):
+    print(body)
     uri_list, res_list = [], []
     for uri in body.query_uris:
         uri_list.append(uri.strip("\u202a"))
-    for item in aget_evaluation(uri_list, return_path=False):
-        print(res_list.append({"img_path":item["img_path"],"img_tags":item["img_tags"][1:]}))
+    for item in vision_pipeline.evaluate(uri_list, is_return_path=False):
+        res_list.append({"img_path":item.img_path,"img_tags":item.img_tags})
     return {"response": res_list}
-
-
-
 
 app.include_router(router)
 @app.get("/")
