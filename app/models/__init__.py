@@ -1,1 +1,1 @@
-from .deepmini import vision_pipeline
+from .Deepmini import vision_pipeline

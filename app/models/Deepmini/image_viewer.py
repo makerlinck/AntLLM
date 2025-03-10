@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 from .vision_pipeline import evaluate
 from app.utils import fm
-from app.models.deepmini.model_provider import initialize_viewer_llm
+from app.models.Deepmini.model_provider import initialize_viewer_llm
 from app.utils.constant.prompt import viewer_prompt
 def vision_llm(image_path:Path):
     # 1. 图像编码

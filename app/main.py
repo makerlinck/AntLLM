@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter
 
-from app.models.deepmini import vision_pipeline
+from app.models.Deepmini import vision_pipeline
 from app.schemas import tagger
 from app.core import config_glob
 

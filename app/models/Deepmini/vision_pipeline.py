@@ -99,7 +99,7 @@ def evaluate_image(
     keys_ban = "nude anus pussy ejaculation penis naked nipples".split(" ")
     # 过滤置信度低的 Tag; 过滤所有 Charactor-Tags; 保留最后一个分级Tag
     for tag in tags:
-        if not (5888 < result_dict[tag][0] < len(tags)) and result_dict[tag][1] >= threshold:
+        if not (5888 < result_dict[tag][0] < len(tags)) and result_dict[tag][1] >= threshold and not (0 <= result_dict[tag][0] < 90):
             for key in keys_with_weight:
                 if key in tag:
                     key_active.append(tag)

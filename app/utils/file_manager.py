@@ -1,8 +1,7 @@
 import shutil
-from pathlib import Path
 from typing import Generator
 from app.core import config_glob
-import yaml as yml
+from pathlib import Path
 
 class FileManager:
 
@@ -30,7 +29,10 @@ class FileManager:
             print(f"DEBUG:源目录为:{target_dir}")
             target_dir.mkdir(parents=True)
         return target_dir
-    def get_origin_files(self, recursive: bool) -> Generator[Path, None, None]:
+
+
+    # 测试用法，将在以后弃用并移除
+    def get_dir_files(self, recursive: bool) -> Generator[Path, None, None]:
         """
         生成器函数，递归查找指定目录下的所有文件
         :param recursive:是否递归查询该目录
@@ -41,7 +43,7 @@ class FileManager:
             if path.is_file() and not path.name.startswith(('~$', '.')):
                 yield path.resolve()
 
-
+    # 测试用法，将在以后弃用并移除
     def move_file(self,src_path: Path, dest_dir: str) -> bool:
         """移动文件到指定output下的路径,需提供源文件路径和目标目录名"""
         dest_dir_path = self.output_dir / dest_dir
@@ -58,4 +60,5 @@ class FileManager:
 
 fm = FileManager()
 if __name__ == "__main__":
-    print(fm.work_dir)
+    for file in fm.get_origin_files(recursive=True):
+        print(check_file_ext(file))
