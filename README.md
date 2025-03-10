@@ -1,30 +1,36 @@
-# AntLLM 🐜
- **智能图片管家** | **An Intelligent Image Organizer**
+# AntLLM 🐜 **智能图片管家**  
 
+[//]: # ([![GitHub Stars]&#40;https://img.shields.io/github/stars/yourname/AntLLM?style=flat-square&#41;]&#40;https://github.com/makerlinck/AntLLM&#41;)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Python Version](https://img.shields.io/badge/python-3.11-blue)
+<div align="center">
+  <img src="docs/images/eagle_00.png" width="30%" alt="界面预览"/>
+  <img src="docs/images/eagle_01.png" width="30%" alt="标签管理"/> 
+  <img src="docs/images/eagle_02.png" width="30%" alt="智能分类"/>
+</div>
 ---
 
 ## 项目概述 📌 | Overview
-基于 **🦜️🔗 LangChain ** 和 ** Deepdanbooru-tagger-mini ** 的智能图片管理系统，实现：
+基于 **🦜️🔗 FastAPI ** 和 ** Deepdanbooru-tagger-mini ** 的智能图片管理系统，实现：
 - 🖼️ 自动化图片归档分类
 - 🏷️ 智能语义标签生成
 - 🚀 即将支持 Eagle 媒体库集成
+- 🚮 调整Langchian以引入更多功能
+
+## 功能矩阵 🚀 | Features Matrix
+
+#### 核心能力
+| 模块 | 功能描述 | 状态 |
+|------|----------|----|
+| 🧠 AI引擎 | Deepdanbooru+LangChain多模态理解 | ✅  |
+| 🖼️ 分类系统 | 基于语义的智能归档 | 🚧  |
+| 🔌 Eagle插件 | 原生插件支持 | 🚧  |
 
 ---
 
-## 功能特性 ✨ | Features
-| 当前功能 | 开发路线图 |
-|----------|------------|
-| ✅ 多格式图片支持（JPG/PNG/WebP） | 🔜 Eagle 软件集成 |
-| ✅ 语义理解分类 | 🔜 高性能矢量检索数据库 |
-| ✅ AI自动标签生成 | 🔜 主流创意软件插件开发 |
-|  | 🔜 团队协作功能 |
-
----
-
-## 快速开始 🚀 | Quick Start
+## 快速部署 ⚡ | Quick Deployment
 ### 环境准备 | Environment Preparation
+注意:该步骤目前仅适用于开发调试
 ```bash
 # 安装依赖
 $ pip install -r requirements.txt
@@ -48,17 +54,35 @@ $ python ./app/test_run_deepmini.py
 
 ```text
 AntLLM/
-├── bin/                  - 核心源代码
-│   ├── deepmini          - deepmini模块 (Deepdanbooru 剪枝版，仅保留tagger核心功能;遵循MIT协议，源仓库地址: https://github.com/KichangKim/DeepDanbooru)
-│   ├── file_manager/     - 文件路径管理操作模块
-│   └── image_viewer.py   - 图片审查模块
-├── .config/              - 配置文件
-│   └── settings.yaml     - 应用配置
-│
-│
-├── docs-n/               - 项目文档
-├── requirements.txt      - Python依赖
-└── README.md             - 项目说明
+├── app/                  - 核心源代码
+│   ├── api/             - API相关模块
+│   │   └── __init__.py
+│   ├── core/            - 核心功能模块
+│   │   ├── __init__.py
+│   │   └── configure.py
+│   ├── models/          - 模型相关文件
+│   │   ├── deepmini/    - Deepdanbooru剪枝版模块
+│   │   │   └── __init__.py
+│   ├── schemas/         - 数据模型定义
+│   │   ├── __init__.py
+│   │   └── tagger.py    - 标签数据模型
+│   ├── service/         - 服务相关模块
+│   │   └── __init__.py
+│   ├── utils/           - 工具函数
+│   │   ├── constant/    - 常量定义
+│   │   │   ├── __init__.py
+│   │   │   └── file_manager.py
+│   │   ├── __init__.py
+│   │   └── main.py      - FastAPI 主程序入口
+│   └── settings.py      - 应用配置文件
+├── data/                - 数据文件
+│   ├── tagger_model/    - 标签模型相关文件
+│   │   ├── .settings_bak.yaml
+│   │   └── settings.yaml
+├── docs/                - 项目文档
+├── requirements.txt     - Python 项目依赖
+└── README.md            - 项目说明文档
+
 ```
 
 ## 参与贡献 🤝 | Contribute
