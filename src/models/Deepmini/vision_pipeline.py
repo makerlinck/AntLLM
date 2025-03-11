@@ -1,57 +1,15 @@
-import os, six, math, skimage.transform
+import os,tensorflow as tf, tensorflow_io as tfio
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple, Union, Generator
-import tensorflow as tf, tensorflow_io as tfio
+from typing import Any, Iterable, Generator
 from .data_loader import load_tags, load_model_from_project, ALLOW_GPU, THRESHOLD
-from src.schemas.tagger import TagItem
+from src.schemas.tagger import TagItem, SUPPORTED_TAG_LANG
+from .transform import transform_and_pad_image
 
+def evaluate_image(
+    image_input: Path, model: Any, lang_tags: list[str], zero_tags: list[str], threshold: float,normalize:bool = True
+) -> Iterable[tuple[str, float]]:
 
-def transform_and_pad_image(
-    image,
-    target_width,
-    target_height,
-    scale=None,
-    rotation=None,
-    shift=None,
-    order=1,
-    mode="edge",
-):
-    """
-    Transform image and pad by edge pixels.
-    """
-    image_width = image.shape[1]
-    image_height = image.shape[0]
-    image_array = image
-
-    t = skimage.transform.AffineTransform(
-        translation=(-image_width * 0.5, -image_height * 0.5)
-    )
-    if scale:
-        t += skimage.transform.AffineTransform(scale=(scale, scale))
-    if rotation:
-        radian = (rotation / 180.0) * math.pi
-        t += skimage.transform.AffineTransform(rotation=radian)
-    t += skimage.transform.AffineTransform(
-        translation=(target_width * 0.5, target_height * 0.5)
-    )
-    if shift:
-        t += skimage.transform.AffineTransform(
-            translation=(target_width * shift[0], target_height * shift[1])
-        )
-    warp_shape = (target_height, target_width)
-    image_array = skimage.transform.warp(
-        image_array, t.inverse, output_shape=warp_shape, order=order, mode=mode
-    )
-    return image_array
-
-def load_image_for_evaluate(
-    input_: Union[str, six.BytesIO], width: int, height: int, normalize: bool = True
-) -> Any:
-    if isinstance(input_, six.BytesIO):
-        image_raw = input_.getvalue()
-    else:
-        image_raw = tf.io.read_file(input_)
-
+    image_raw = tf.io.read_file(image_input.as_posix())
     try:
         image = tf.io.decode_png(image_raw, channels=3)
     except:
@@ -59,6 +17,7 @@ def load_image_for_evaluate(
         image = tfio.image.decode_webp(image_raw)
         image = tfio.experimental.color.rgba_to_rgb(image)
 
+    width, height = model.input_shape[2], model.input_shape[1]
     image = tf.image.resize(
         image,
         size=(height, width),
@@ -68,82 +27,70 @@ def load_image_for_evaluate(
     image = image.numpy()  # EagerTensor to np.array
     image = transform_and_pad_image(image, width, height)
 
-    if normalize:
-        image = image / 255.0
+    if normalize:image = image / 255.0
 
-    return image
-
-def evaluate_image(
-    image_input: Union[str, six.BytesIO], model: Any, tags: List[str], threshold: float
-) -> Iterable[Tuple[str, float]]:
-    width = model.input_shape[2]
-    height = model.input_shape[1]
-    image = load_image_for_evaluate(image_input, width=width, height=height)
-    image_shape = image.shape
-    image = image.reshape((1, image_shape[0], image_shape[1], image_shape[2]))
-    y = model.predict(image)[0]
+    img_shape = image.shape
+    image = image.reshape((1, img_shape[0], img_shape[1], img_shape[2]))
+    predict_result = model.predict(image)[0]
     result_dict = {}
 
-    for i, tag in enumerate(tags):
-        result_dict[tag] = (i,y[i])
 
-    key_active ,ratings = [], []
-    keys_with_weight = "cum nude anus pussy censored mosaic_censoring ejaculation fellatio imminent_rape imminent_sex imminent_vaginal nipples breasts clitoris urethra uncensored naked no_panties".split(" ")
-    keys_ban = "nude anus pussy ejaculation penis naked nipples".split(" ")
     # 过滤置信度低的 Tag; 过滤所有 Charactor-Tags; 保留最后一个分级Tag
-    for tag in tags:
-        if not (5888 < result_dict[tag][0] < len(tags)) and result_dict[tag][1] >= threshold and not (0 <= result_dict[tag][0] < 90):
-            for key in keys_with_weight:
-                if key in tag:
-                    key_active.append(tag)
-            yield tag, result_dict[tag][1]
-        elif result_dict[tag][0] >= len(tags)-3:
-            ratings.append((tag, result_dict[tag][1]))
+    CENSORED_KEYS = "nude anus pussy ejaculation penis nipples naked fellatio urethra".split(" ")
+    len_tags, tags_activated, rating = len(lang_tags), [], []
+    t_safe, t_sus, t_nsfw = lang_tags[-3], lang_tags[-2], lang_tags[-1]
 
-    if ratings[0][1] > ratings[1][1] + ratings[2][1]:
-        yield "safe", ratings[0][1]
+    for i,tag in enumerate(lang_tags):
+        result_dict[tag] = (i, predict_result[i])
+        if not (len(lang_tags) - 3 < result_dict[tag][0] < len(lang_tags)) and result_dict[tag][1] >= threshold:
+            tags_activated.append(zero_tags[i])
+            yield tag, result_dict[tag][1]
+        elif result_dict[tag][0] >= len(lang_tags)-3:
+            rating.append(result_dict[tag][1])
+
+    if any(tag in CENSORED_KEYS for tag in tags_activated):
+        yield t_nsfw, result_dict[lang_tags[len_tags-1]][1]
     else:
-        ps = False
-        for tag in keys_ban:
-            if tag in key_active:
-                if result_dict[tag][1] > 0.81:
-                    ps = True
-        if (ratings[2][1]-ratings[1][1]-ratings[0][1])*(ratings[2][1]-ratings[1][1]-ratings[0][1]) < 0.09:
-            if len(key_active) > 1 or ps:
-                yield "nsfw", ratings[2][1]
-            else:
-                yield "sus", ratings[1][1]
+        if max(*rating) == rating[0]:
+            yield t_safe, rating[0]
+        elif max(*rating) == rating[1]:
+            if rating[0] > rating[2]:
+                yield t_sus, rating[1]
+            else:yield t_nsfw,rating[2]
         else:
-            if ratings[1][1] > ratings[2][1] and not ps:
-                yield "sus", ratings[1][1]
-            else:
-                yield "nsfw", ratings[2][1]
+            yield t_nsfw, rating[2]
 
 from src.utils.FileManager import check
 def evaluate(
-    image_paths:list[Path | str], #this
+    image_paths:list[Path],
+    tag_language:SUPPORTED_TAG_LANG = "en",
     is_return_path:bool = False,
     verbose:bool = False
 ) -> Generator[TagItem, None, None]:
-    if not ALLOW_GPU:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
+    if not ALLOW_GPU: os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     if not load_model_from_project().exists():
         raise Exception("h5 Model file not found. Please Check!")
+
     model = tf.keras.models.load_model(load_model_from_project(), compile=False)
-    tags = load_tags("en")
+    lang_tags = load_tags(tag_language)
+    zero_tags = load_tags("zero")
     for image_path in image_paths:
         # 兼容字符串路径
         image_path = Path(image_path)
-        if not check.check_file(image_path, "image"):
-            continue
-        if verbose:print(f"Tags of {image_path}:")
+        # 检查当前图像文件是否合法,若检查未通过则跳过该图像文件后续处理
+        if not check.check_file(image_path, "image"):continue
         img_tags = []
-        for tag, score in evaluate_image(image_path.as_posix(), model, tags, THRESHOLD):
-            if verbose:print(f"tag:{tag} score:({score:05.3f})")
+        # 收集通过阈值验证的图像标签（evaluate_image已内置阈值过滤逻辑）
+        for tag, score in evaluate_image(
+                image_path,
+                model, zero_tags= zero_tags,
+                lang_tags= lang_tags,
+                threshold= THRESHOLD
+        ):
+            if verbose: print(f"tag:{tag} score:({score:05.3f})")
             img_tags.append(tag)
-        if not is_return_path:
-            image_path = str(image_path.as_posix())
+        # 统一路径格式输出（优先使用字符串类型）
+        image_path = str(image_path) if not is_return_path else image_path
+
+        if verbose: print(f"Tags of {image_path}:")
         yield TagItem(img_path=image_path, img_tags=img_tags)
-
-

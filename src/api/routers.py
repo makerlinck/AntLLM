@@ -14,7 +14,7 @@ async def tagging_images(body: tagger.TaggerQuery) -> tagger.TaggerResponse:
     uri_list = [uri.strip('\u202a') for uri in body.query_uris]
     return tagger.TaggerResponse(
         response=[
-            tagger.TagItem(img_path=item.img_path,img_tags=item.img_tags) for item in vision_pipeline.evaluate(uri_list, is_return_path=False)
+            tagger.TagItem(img_path=item.img_path,img_tags=item.img_tags) for item in vision_pipeline.evaluate(uri_list,tag_language=body.tag_language, is_return_path=False)
         ])
 
 @router.post("/tag-translator/", response_model=list[str])

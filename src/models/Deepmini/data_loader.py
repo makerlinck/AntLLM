@@ -8,8 +8,6 @@ ALLOW_GPU = True
 THRESHOLD = 0.618
 MODEL_PROJECT_PATH = fm.work_dir / "data" / "tagger_model"
 
-
-TAG_LANGUAGE = "zh_cn"
 # END #
 
 def load_tags(lang:Literal[*SUPPORTED_TAG_LANG]):

@@ -260,7 +260,6 @@ async function processChunk(uris, objs) {
       body: JSON.stringify({ tag_language: DEFAULT_LANGUAGE,query_uris: uris }),
       signal: abortController.signal
     });
-
     const { response: results } = await response.json();
 
     results.forEach((item, index) => {
