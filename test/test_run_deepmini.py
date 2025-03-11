@@ -1,5 +1,5 @@
-from app.models import vision_pipeline
-from app.utils import fm
+from src.models import vision_pipeline
+from src.utils import fm
 
 def run_deepmini():
     imgs = []

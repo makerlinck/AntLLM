@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Iterable, List, Tuple, Union, Generator
 import tensorflow as tf, tensorflow_io as tfio
 from .data_loader import load_tags, load_model_from_project, ALLOW_GPU, THRESHOLD
-from app.schemas.tagger import TagItem
+from src.schemas.tagger import TagItem
 
 
 def transform_and_pad_image(
@@ -26,29 +26,22 @@ def transform_and_pad_image(
     t = skimage.transform.AffineTransform(
         translation=(-image_width * 0.5, -image_height * 0.5)
     )
-
     if scale:
         t += skimage.transform.AffineTransform(scale=(scale, scale))
-
     if rotation:
         radian = (rotation / 180.0) * math.pi
         t += skimage.transform.AffineTransform(rotation=radian)
-
     t += skimage.transform.AffineTransform(
         translation=(target_width * 0.5, target_height * 0.5)
     )
-
     if shift:
         t += skimage.transform.AffineTransform(
             translation=(target_width * shift[0], target_height * shift[1])
         )
-
     warp_shape = (target_height, target_width)
-
     image_array = skimage.transform.warp(
         image_array, t.inverse, output_shape=warp_shape, order=order, mode=mode
     )
-
     return image_array
 
 def load_image_for_evaluate(
@@ -58,9 +51,11 @@ def load_image_for_evaluate(
         image_raw = input_.getvalue()
     else:
         image_raw = tf.io.read_file(input_)
+
     try:
         image = tf.io.decode_png(image_raw, channels=3)
     except:
+        print("Failed decode image as png,trying decode as webp")
         image = tfio.image.decode_webp(image_raw)
         image = tfio.experimental.color.rgba_to_rgb(image)
 
@@ -90,8 +85,6 @@ def evaluate_image(
     result_dict = {}
 
     for i, tag in enumerate(tags):
-        # if not 5889 <= i <= 7718:
-        #     print(f"{i}:{tag}")
         result_dict[tag] = (i,y[i])
 
     key_active ,ratings = [], []
@@ -126,8 +119,7 @@ def evaluate_image(
             else:
                 yield "nsfw", ratings[2][1]
 
-
-
+from src.utils.FileManager import check
 def evaluate(
     image_paths:list[Path | str], #this
     is_return_path:bool = False,
@@ -139,20 +131,19 @@ def evaluate(
     if not load_model_from_project().exists():
         raise Exception("h5 Model file not found. Please Check!")
     model = tf.keras.models.load_model(load_model_from_project(), compile=False)
-
-    tags = load_tags()
+    tags = load_tags("en")
     for image_path in image_paths:
-        if type(image_path) == str:
-            # 兼容字符串路径
-            image_path = Path(image_path)
+        # 兼容字符串路径
+        image_path = Path(image_path)
+        if not check.check_file(image_path, "image"):
+            continue
+        if verbose:print(f"Tags of {image_path}:")
+        img_tags = []
+        for tag, score in evaluate_image(image_path.as_posix(), model, tags, THRESHOLD):
+            if verbose:print(f"tag:{tag} score:({score:05.3f})")
+            img_tags.append(tag)
+        if not is_return_path:
+            image_path = str(image_path.as_posix())
+        yield TagItem(img_path=image_path, img_tags=img_tags)
 
-        if image_path.exists():
-            if verbose:print(f"Tags of {image_path}:")
-            img_tags = []
-            for tag, score in evaluate_image(image_path.as_posix(), model, tags, THRESHOLD):
-                if verbose:print(f"tag:{tag} score:({score:05.3f})")
-                img_tags.append(tag)
-            if not is_return_path:
-                image_path = str(image_path.as_posix())
-            yield TagItem(img_path=image_path, img_tags=img_tags)
 

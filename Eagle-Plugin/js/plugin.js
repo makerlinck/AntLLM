@@ -6,14 +6,16 @@ let progress = {
   total: 0,
   cancelled: false
 };
-let chunkSize = 8; // 默认分块大小
+let chunkSize = 32; // 默认分块大小
+let maxChunkSize = 192; //
+DEFAULT_LANGUAGE = 'zh_cn';
 
 // ==================== UI 模板 ====================
 const uiTemplate = () => `
   <div class="container">
     <header class="header">
       <img src="${eagle.plugin.manifest.logo}" class="logo" alt="AntLLM Logo">
-      <h1>AntLLM 🐜 智能文件管理
+      <h1>AntLLM 🐜 智能文件管理 </h1>
       <h1>v${eagle.plugin.manifest.version}</h1>
     </header>
 
@@ -24,12 +26,12 @@ const uiTemplate = () => `
           type="number" 
           id="chunkSize" 
           min="1" 
-          max="64" 
+          max="${maxChunkSize}" 
           value="${chunkSize}"
           ${isTaggingActive ? 'disabled' : ''}
           onchange="updateChunkSize(this.value)"
         >
-        <span class="hint">(1-64)</span>
+        <span class="hint">(1-${maxChunkSize})</span>
       </div>
     </div>
 
@@ -195,7 +197,7 @@ const uiTemplate = () => `
 
 // ==================== 功能函数 ====================
 function updateChunkSize(value) {
-  const size = Math.min(Math.max(parseInt(value), 1), 64);
+  const size = Math.min(Math.max(parseInt(value), 1), maxChunkSize);
   chunkSize = isNaN(size) ? 16 : size;
 }
 
@@ -255,7 +257,7 @@ async function processChunk(uris, objs) {
     const response = await fetch('http://127.0.0.1:8000/api/tagger', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query_uris: uris }),
+      body: JSON.stringify({ tag_language: DEFAULT_LANGUAGE,query_uris: uris }),
       signal: abortController.signal
     });
 

@@ -44,9 +44,20 @@ $ wget https://github.com/KichangKim/DeepDanbooru/releases/download/v4-20200814-
 ### 基本使用 | Basic Usage
 ```bash
 
-$ python ./app/test_run_deepmini.py
+$ python ./src/test_run_deepmini.py #已弃用
 #在第一次运行以后默认会在工作目录产生origin和output文件夹，origin文件夹为原始图片，output文件夹为自动分类后的图片。
 # 将原始图片放入origin文件夹中，再次运行即可自动进行分类。
+
+
+```
+以下是node.js实现AntLLM API调用的示例代码：
+```
+const response = await fetch('http://127.0.0.1:8000/api/tagger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag_language: DEFAULT_LANGUAGE,query_uris: uris }),
+      signal: abortController.signal
+});
 ```
 
 

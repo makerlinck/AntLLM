@@ -1,6 +1,6 @@
 import shutil
 from typing import Generator
-from app.core import config_glob
+from src.core import config_glob
 from pathlib import Path
 
 class FileManager:

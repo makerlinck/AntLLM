@@ -1,16 +1,20 @@
-from pathlib import Path
+from typing import Literal
 
-from app.utils import fm
+from src import SUPPORTED_TAG_LANG
+from src.utils import fm
 
 # 配置 #
 ALLOW_GPU = True
 THRESHOLD = 0.618
 MODEL_PROJECT_PATH = fm.work_dir / "data" / "tagger_model"
 
+
+TAG_LANGUAGE = "zh_cn"
 # END #
-def load_tags():
-    tags_path = MODEL_PROJECT_PATH / "tags.txt"
-    with open(tags_path, "r") as tags_stream:
+
+def load_tags(lang:Literal[*SUPPORTED_TAG_LANG]):
+    tags_path = MODEL_PROJECT_PATH / f"tags-{lang}.txt"
+    with open(tags_path, "r",encoding="utf-8") as tags_stream:
         tags = [tag for tag in (tag.strip() for tag in tags_stream) if tag]
         return tags
 
@@ -20,4 +24,4 @@ def load_model_from_project():
 
 if __name__ == "__main__":
     print(MODEL_PROJECT_PATH)
-    print(load_tags())
+    print(load_tags("zh_cn"))

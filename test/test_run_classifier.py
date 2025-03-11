@@ -1,10 +1,10 @@
 # 程序主入口
 
 from langchain.output_parsers import StructuredOutputParser
-from app.utils import fm
-from app.utils.constant.response_schemas import response_schemas
-from app.utils.constant.prompt import classifier_prompt
-from app.models.Deepmini.model_provider import initialize_classifier_llm
+from src.utils import fm
+from src.utils.constant.response_schemas import response_schemas
+from src.utils.constant.prompt import classifier_prompt
+from src.models.Deepmini.model_provider import initialize_classifier_llm
 from test_run_deepmini import run_deepmini
 
 parser = StructuredOutputParser.from_response_schemas(response_schemas)

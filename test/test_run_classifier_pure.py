@@ -1,7 +1,7 @@
 # 程序主入口
 from pathlib import Path
 
-from app.utils import fm
+from src.utils import fm
 from test_run_deepmini import run_deepmini
 
 
