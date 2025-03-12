@@ -5,4 +5,4 @@ scikit-image~=0.25.2
 pydantic~=2.10.6
 fastapi~=0.115.11
 uvicorn~=0.34.0
-tensorflow~=2.19.0rc0
+tensorflow~=2.19.0
