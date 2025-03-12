@@ -13,8 +13,6 @@ class FileManager:
             raise RuntimeError("工作目录不正确，请检查工作目录")
 
         self.user_dir = Path.home()
-        self.origin_dir = self.touch_dir("origin")
-        self.output_dir = self.touch_dir("output")
 
         print(f"初始化工作目录为:{self.work_dir}")
 
@@ -57,8 +55,3 @@ class FileManager:
         shutil.move(src_path, dest_dir_path / src_path.name)
         print("文件移动成功。目标路径：" + str(dest_dir_path))
         return True
-
-fm = FileManager()
-if __name__ == "__main__":
-    for file in fm.get_origin_files(recursive=True):
-        print(check_file_ext(file))
