@@ -28,7 +28,6 @@ class FileManager:
             target_dir.mkdir(parents=True)
         return target_dir
 
-
     # 测试用法，将在以后弃用并移除
     def get_dir_files(self, recursive: bool) -> Generator[Path, None, None]:
         """
@@ -55,3 +54,5 @@ class FileManager:
         shutil.move(src_path, dest_dir_path / src_path.name)
         print("文件移动成功。目标路径：" + str(dest_dir_path))
         return True
+
+fm = FileManager()

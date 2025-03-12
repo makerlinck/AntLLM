@@ -1,40 +1,38 @@
-import multiprocessing as mp
-import os
-from pathlib import Path
-from typing import Generator
-
-from src.utils.FileManager import check
-from src.schemas.tagger import TagItem, SUPPORTED_TAG_LANG
-from .data_loader import load_tags, load_model_from_project, ALLOW_GPU, THRESHOLD
-from .vision_pipeline import evaluate_image
-is_return_path = False
-
-# 新增：进程初始化函数
+import os,tensorflow as tf
+global shared_model, shared_lang_tags, shared_zero_tags
 def init_process(model_path_str, tag_lang):
-    import tensorflow as tf
-
     global shared_model, shared_lang_tags, shared_zero_tags
     model_path = Path(model_path_str)
     shared_model = tf.keras.models.load_model(model_path, compile=False)
     shared_lang_tags = load_tags(tag_lang)
     shared_zero_tags = load_tags("zero")
 
-# 新增：任务处理函数
+# 任务处理函数
+from .vision_pipeline import evaluate_image
 def process_image(image_path_str):
     image_path = Path(image_path_str)
-    if not check.check_file(image_path, "image"):
-        return None  # 跳过无效文件
-    img_tags = []
-    for tag, score in evaluate_image(
-        image_path,
-        shared_model,
-        lang_tags=shared_lang_tags,
-        zero_tags=shared_zero_tags,
-        threshold=THRESHOLD
-    ):
-        img_tags.append(tag)
-    image_path = str(image_path) if not is_return_path else image_path
-    return TagItem(img_path=image_path, img_tags=img_tags)
+
+    if checker.check_file(image_path, "image"): # 跳过无效文件
+        img_tags = []
+        for tag, score in evaluate_image(
+            image_path,
+            shared_model,
+            lang_tags=shared_lang_tags,
+            zero_tags=shared_zero_tags,
+            threshold=THRESHOLD
+        ):
+            img_tags.append(tag)
+        return image_path, img_tags
+
+
+from typing import Generator
+from .data_loader import load_tags, ALLOW_GPU, MAX_TASK_COUNT
+from src.schemas.tagger import SUPPORTED_TAG_LANG
+import multiprocessing as mp
+from pathlib import Path
+from src.models.Deepmini.data_loader import load_model_from_project, THRESHOLD
+from src.schemas.tagger import TagItem
+from src.utils.FileManager import checker
 def evaluate(
     image_paths: list[str],
     tag_language: SUPPORTED_TAG_LANG = "en",
@@ -52,7 +50,7 @@ def evaluate(
 
     # 创建进程池并并行处理
     with mp.Pool(
-        processes=2,
+        processes=MAX_TASK_COUNT,
         initializer=init_process,
         initargs=(str(model_path), tag_language)
     ) as pool:

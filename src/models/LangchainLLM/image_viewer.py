@@ -3,9 +3,8 @@ from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
-from .vision_pipeline import evaluate
 from src.utils import fm
-from src.models.Deepmini.model_provider import initialize_viewer_llm
+from src.models.LangchainLLM.model_provider import initialize_viewer_llm
 from src.utils.constant.prompt import viewer_prompt
 def vision_llm(image_path:Path):
     # 1. 图像编码

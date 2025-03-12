@@ -1,12 +1,18 @@
+from pathlib import Path
 from typing import Literal
-
 from src import SUPPORTED_TAG_LANG
-from src.utils import fm
-
+from src.core import config_glob
+def find_root() -> Path:
+    current_path = Path(__file__)
+    while current_path != current_path.parent:
+        if current_path.name == config_glob.app_name:
+            return current_path
+        current_path = current_path.parent
+    raise RuntimeError("Project root not found")
 # 配置 #
 ALLOW_GPU = True # 是否使用GPU
-THRESHOLD = 0.618 # 预测置信度阈值,越高则越精确，但预测内容会变少,对当前代码来说过高的阈值可能会使进程崩溃，建议0.5+-0.7
-MODEL_PROJECT_PATH = fm.work_dir / "data" / "tagger_model" # Danbooru模型文件路径
+THRESHOLD = 0.618 # 预测置信度阈值,越高则越精确，但预测内容会变少，建议设置范围:0.5+-0.7
+MODEL_PROJECT_PATH = find_root() / "data" / "tagger_model" # Danbooru模型文件路径
 MAX_TASK_COUNT = 2 # 最大多进程并发数
 
 # END #
@@ -22,5 +28,4 @@ def load_model_from_project():
     return model_path
 
 if __name__ == "__main__":
-    print(MODEL_PROJECT_PATH)
-    print(load_tags("zh_cn"))
+    print(find_root())
