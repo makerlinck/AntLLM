@@ -1,5 +1,7 @@
 # AntLLM 🐜 **智能文件管家**  
 
+[English](README-EN.md) | [中文版](README.md)
+
 [//]: # ([![GitHub Stars]&#40;https://img.shields.io/github/stars/yourname/AntLLM?style=flat-square&#41;]&#40;https://github.com/makerlinck/AntLLM&#41;)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Python Version](https://img.shields.io/badge/python-3.11-blue)
