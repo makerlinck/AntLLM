@@ -25,4 +25,6 @@ import warnings,os
 warnings.filterwarnings("ignore")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from .evaluation import evaluate
+from .evaluation import evaluate, run_test_evaluation
+from .data_loader import *
+from .schemas import TagLanguage,TagItem

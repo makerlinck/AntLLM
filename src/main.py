@@ -16,6 +16,17 @@ async def get_config():
 async def pong():
     return "Pong!"
 
+from src.models.Deepmini.evaluation import init_pool, shutdown_pool
+
+@app.on_event("startup")
+async def startup():
+    """应用启动时初始化进程池"""
+    init_pool()
+
+@app.on_event("shutdown")
+async def shutdown():
+    """应用关闭时销毁进程池"""
+    shutdown_pool()
 app.include_router(router)
 
 if __name__ == "__main__":

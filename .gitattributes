@@ -1,3 +1,2 @@
 *.h5 filter= diff= merge= -text
-origin/** filter= diff= merge= -text
-output/** filter= diff= merge= -text
+__pycache__/

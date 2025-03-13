@@ -11,12 +11,9 @@ async def tagging_images(body: tagger.TaggerQuery) -> tagger.TaggerResponse:
     try:
         # 确保每个URI是字符串并去除特殊空格
         uri_list = [str(uri).strip('\u202a') for uri in body.query_uris]
-
         # 使用线程池执行同步函数
-        import asyncio
         from src.models.Deepmini import evaluate as eva
-        eva_results = await asyncio.to_thread(
-            eva,
+        eva_results = eva(
             uri_list,
             tag_language=body.tag_language,
             is_return_path=False,
@@ -35,7 +32,7 @@ async def tagging_images(body: tagger.TaggerQuery) -> tagger.TaggerResponse:
         )
     except OSError as e:
         # 记录错误并返回空响应
-        print(f"tagger Error: {e}")
+        print(f"Tagger Error: {e}")
         return tagger.TaggerResponse(response=[])
 
 

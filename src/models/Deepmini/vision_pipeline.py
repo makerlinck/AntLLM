@@ -1,17 +1,15 @@
 import tensorflow as tf, tensorflow_io as tfio
-from pathlib import Path
-from typing import Any, Iterable
-
 import math, skimage.transform
+# 图像处理业务函数
 def transform_and_pad_image(
-    image,
-    target_width,
-    target_height,
-    scale=None,
-    rotation=None,
-    shift=None,
-    order=1,
-    mode="edge",
+        image,
+        target_width,
+        target_height,
+        scale=None,
+        rotation=None,
+        shift=None,
+        order=1,
+        mode="edge",
 ):
     """ 应用仿射变换处理图像，并通过边缘像素扩展填充至目标尺寸 """
     image_height, image_width = image.shape[:2]  # 直接获取形状
@@ -43,8 +41,15 @@ def transform_and_pad_image(
         mode=mode
     )
     return image
+
+
+from pathlib import Path
+from typing import Any, Iterable
+
+
 def evaluate_image(
-    image_input: Path, model: Any, lang_tags: list[str], zero_tags: list[str], threshold: float,normalize:bool = True
+        image_input: Path, model: Any, lang_tags: list[str], zero_tags: list[str], threshold: float,
+        normalize: bool = True
 ) -> Iterable[tuple[str, float]]:
     # print(f"Pipeline: Image of current task is {image_input.as_posix()}\n")
     image_raw = tf.io.read_file(image_input.as_posix())
@@ -65,24 +70,23 @@ def evaluate_image(
     image = image.numpy()  # EagerTensor to np.array
     image = transform_and_pad_image(image, width, height)
 
-    if normalize:image = image / 255.0
+    if normalize: image = image / 255.0
 
     img_shape = image.shape
     image = image.reshape((1, img_shape[0], img_shape[1], img_shape[2]))
     predict_result = model.predict(image)[0]
     result_dict = {}
 
-
     # 过滤置信度低的 Tag; 过滤所有 Charactor-Tags; 保留最后一个分级Tag
     CENSORED_KEYS = "nude anus pussy ejaculation penis nipples naked fellatio urethra".split(" ")
     len_tags, tags_activated, rating = len(lang_tags), [], []
     t_safe, t_sus, t_nsfw = lang_tags[-3], lang_tags[-2], lang_tags[-1]
-    for index_,tag in enumerate(lang_tags):
+    for index_, tag in enumerate(lang_tags):
         result_dict[tag] = predict_result[index_]
-        if 0 <= index_ < len(lang_tags)-3 and result_dict[tag] >= threshold:
+        if 0 <= index_ < len(lang_tags) - 3 and result_dict[tag] >= threshold:
             tags_activated.append(zero_tags[index_])
             yield tag, result_dict[tag]
-        elif index_ >= len(lang_tags)-3:
+        elif index_ >= len(lang_tags) - 3:
             rating.append(result_dict[tag])
 
     try:
@@ -105,3 +109,5 @@ def evaluate_image(
         RATING_TAGS = [t_safe, t_sus, t_nsfw]
         selected_tag = RATING_TAGS[max_index]
         yield selected_tag, max_rating_value
+
+

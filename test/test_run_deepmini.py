@@ -1,13 +1,11 @@
-from src.models import vision_pipeline
-from src.utils import fm
+from datetime import datetime
 
-def run_deepmini():
-    imgs = []
-    for img_path in fm.get_origin_files(recursive=True):
-        print(f"\"{img_path}\",")
-        imgs.append(img_path)
-    return vision_pipeline.evaluate(imgs,verbose=True)
+from src.models.Deepmini import run_test_evaluation
 
 if __name__ == "__main__":
-    for i in run_deepmini():
-        pass
+    print("Running test evaluation...")
+    for res in run_test_evaluation():
+        print(str(res))
+        print(datetime.now())
+
+

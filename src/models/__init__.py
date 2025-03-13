@@ -1,1 +1,0 @@
-from .Deepmini import vision_pipeline

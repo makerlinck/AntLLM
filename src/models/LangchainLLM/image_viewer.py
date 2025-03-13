@@ -3,7 +3,6 @@ from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
-from src.utils import fm
 from src.models.LangchainLLM.model_provider import initialize_viewer_llm
 from src.utils.constant.prompt import viewer_prompt
 def vision_llm(image_path:Path):

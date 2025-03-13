@@ -8,7 +8,7 @@ let progress = {
 };
 let chunkSize = 32; // 默认分块大小
 let maxChunkSize = 192; //
-DEFAULT_LANGUAGE = 'zh_cn';
+DEFAULT_LANGUAGE = 'en';
 
 // ==================== UI 模板 ====================
 const uiTemplate = () => `
@@ -46,6 +46,13 @@ const uiTemplate = () => `
         <span class="icon">⏹️</span>${progress.cancelled ? '正在取消...' : '取消操作'}
       </button>
     </div>
+    <div class="control-group-2">
+        <button class="btn warning" onclick="confirmRemoveTags()">
+            <span class="icon">🔄</span>清除选中标签
+        </button>
+      </button>
+    </div>
+
 
     ${progress.total > 0 ? `
     <div class="progress-container">
@@ -116,6 +123,12 @@ const uiTemplate = () => `
       gap: 12px;
       margin: 2rem 0;
       justify-content: center;
+    }
+    .control-group-2 {
+      display: flex;
+      gap: 12px;
+      margin: 2rem 0;
+      justify-content: end;
     }
 
     .btn {
@@ -205,6 +218,10 @@ function confirmForceRefresh() {
   const confirmed = confirm("⚠️ 强制刷新将覆盖现有标签！\n\n确定要继续吗？");
   if (confirmed) handleTagging(true);
 }
+function confirmRemoveTags() {
+  const confirmed = confirm("⚠️ 将清除现有标签！\n\n确定要继续吗？");
+  if (confirmed) removeTags();
+}
 
 // ==================== 核心函数 ====================
 async function handleTagging(force) {
@@ -271,7 +288,13 @@ async function processChunk(uris, objs) {
     if (error.name !== 'AbortError') throw error;
   }
 }
-
+async function removeTags() {
+    const items = await eagle.item.getSelected();
+    for(i in items){
+        items[i].tags = [];
+        items[i].save();
+    }
+}
 function handleCancel() {
   if (isTaggingActive) {
     progress.cancelled = true;
