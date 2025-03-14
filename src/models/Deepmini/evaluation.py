@@ -1,6 +1,8 @@
-import os, multiprocessing as mp
+import asyncio
+import os
 from pathlib import Path
-from typing import Literal, Generator
+from typing import Literal, AsyncIterable
+
 from .data_loader import get_model_path, get_tags, MAX_TASKS, THRESHOLD, ALLOW_GPU
 from .vision_pipeline import evaluate_image
 from .schemas import TagItem, SUPPORTED_LANGUAGES
@@ -16,13 +18,13 @@ def init_process(model_path, zero_tags):
     shared_zero_tags = zero_tags
 
 
+from concurrent.futures import ProcessPoolExecutor
 def init_pool():
-    """ 应用启动时初始化进程池 """
-    global global_pool
     model_path = get_model_path()
     zero_tags = get_tags("zero")
-    global_pool = mp.Pool(
-        processes=MAX_TASKS,
+    global global_pool
+    global_pool = ProcessPoolExecutor(
+        max_workers=MAX_TASKS,
         initializer=init_process,
         initargs=(model_path, zero_tags)
     )
@@ -32,8 +34,7 @@ def shutdown_pool():
     """ 关闭进程池 """
     global global_pool
     if global_pool:
-        global_pool.close()  # 禁止新任务
-        global_pool.join()  # 等待现有任务完成
+        global_pool.shutdown(wait=True)
         global_pool = None
 
 
@@ -53,33 +54,42 @@ def process_image(params):
     return idx, image_path, img_tags
 
 
-def evaluate(
-        imgs_seq: list[tuple[int, Path]],
-        tag_language: Literal[*SUPPORTED_LANGUAGES],
-        is_return_path: bool = False,
-        verbose: bool = False
-) -> Generator[TagItem, None, None]:
+async def evaluate(
+    imgs_seq: list[tuple[int, Path]],
+    tag_language: Literal[*SUPPORTED_LANGUAGES],
+    is_return_uri_as_path: bool = False
+) -> AsyncIterable[TagItem]:
     if not ALLOW_GPU:
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-    # 使用全局进程池处理任务
     params = [(idx, path, tag_language) for idx, path in imgs_seq]
-    results = global_pool.map(process_image, params)  # 非阻塞式调用
-
-    for res in results:
-        if res is None:
-            continue
-        idx, img_path, img_tags = res
-        if not is_return_path:
-            img_path = str(img_path.as_posix())
-            print(img_path)
-        yield TagItem(
-            img_seq=(idx, img_path),
-            img_tags=img_tags
+    loop = asyncio.get_event_loop()
+    # 使用全局进程池提交任务（确保已初始化）
+    tasks = [
+        loop.run_in_executor(
+            global_pool,  # 使用全局进程池
+            process_image,
+            p
         )
+        for p in params
+    ]
 
+    for future in asyncio.as_completed(tasks):
+        try:
+            res = await future
+            if res is None:
+                continue
+            idx, path, img_tags = res
+            path = str(path) if not is_return_uri_as_path else path
+            yield TagItem(
+                img_seq=(idx, path),
+                img_tags=img_tags,
+            )
+        except Exception as e:
+            print(f"Error processing image: {e}")
+            continue
 
 def run_test_evaluation():
     from .data_loader import PACKAGE_PATH

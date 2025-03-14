@@ -263,7 +263,7 @@ async function handleTagging(force) {
 
     addLog(progress.cancelled ? '操作已取消' : '✅ 处理完成');
   } catch (error) {
-    addLog(`❌ 错误: ${error.message}`);
+    addLog(`❌ Error: ${error.message}`);
   } finally {
     cleanup();
   }
@@ -271,47 +271,63 @@ async function handleTagging(force) {
 
 // ==================== 工具函数 ====================
 async function processChunk(uris, objs) {
-  try {
-    const socket = new WebSocket('ws://127.0.0.1:8000/ws/tagger'); // WebSocket地址
-    return new Promise((resolve, reject) => {
-      socket.addEventListener('message', (event) => {
-        const data = JSON.parse(event.data);
-        if (data.error) {
-          reject(new Error(data.error));
-          return;
-        }
+  return new Promise((resolve, reject) => {
+    const socket = new WebSocket('ws://127.0.0.1:8000/ws/tagger');
+    let results = []; // 存储所有进度结果
 
-        // 处理返回结果
-        data.response.forEach((item) => {
-          idx = item.img_seq[0]
-          objs[idx].tags = item.img_tags;
-          objs[idx].save();
-          addLog(`已处理: ${objs[idx].name}`);
-        });
+    socket.addEventListener('message', (event) => {
+      const data = JSON.parse(event.data);
+      if (data.error) {
+        reject(new Error(data.error));
+        return;
+      }
+
+      if (data.status === 'progressing') {
+        results.push(data.content);
+        if (data.progress >= progress.current) progress.current = data.progress; // 更新进度并防止远程的进程回溯进度
+        updateUI(); // 实时刷新
+      } else if (data.status === 'done') {
+        handleResults(results, objs);
         resolve();
-      });
-
-      socket.addEventListener('open', () => {
-        // 发送请求数据
-        socket.send(JSON.stringify({
-          tag_language: DEFAULT_LANGUAGE,
-          query_uris: uris
-        }));
-      });
-
-      socket.addEventListener('error', (error) => {
-        reject(error);
-      });
-
-      // 取消操作时关闭连接
-      abortController.signal.addEventListener('abort', () => {
-        socket.close();
-      });
+      }
     });
-  } catch (error) {
-    if (error.name !== 'AbortError') throw error;
-  }
+
+    socket.addEventListener('open', () => {
+      // 发送请求数据
+      socket.send(JSON.stringify({
+        tag_language: DEFAULT_LANGUAGE,
+        query_uris: uris
+      }));
+    });
+
+    socket.addEventListener('close', () => {
+      if (results.length === 0) {
+        reject(new Error('连接意外关闭'));
+      }
+    });
+
+    socket.addEventListener('error', (error) => {
+      reject(error);
+    });
+
+    // 取消操作时关闭连接
+    abortController.signal.addEventListener('abort', () => {
+      socket.close();
+      reject(new Error('操作被取消'));
+    });
+  });
 }
+
+// 辅助函数：处理累积的 results 并更新文件标签
+function handleResults(results, objs) {
+  results.forEach(item => {
+    const idx = item.img_seq[0];
+    objs[idx].tags = item.img_tags;
+    objs[idx].save();
+    addLog(`已处理: ${objs[idx].name}`);
+  });
+}
+
 
 async function removeTags() {
     const items = await eagle.item.getSelected();

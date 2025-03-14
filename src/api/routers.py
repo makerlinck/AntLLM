@@ -1,12 +1,7 @@
-import asyncio
 import time
-
 from fastapi import APIRouter
 from starlette.websockets import WebSocket
-
 from src.schemas import tagger
-
-
 router_ws = APIRouter(
     prefix="/ws",
     tags=["WS CONNECTION ENTRANCE"],
@@ -24,36 +19,35 @@ async def tagging_images(websocket: WebSocket):
         from src.utils.FileManager.checker import check_file
         from pathlib import Path
 
-        uris_seq = [
-            (i, Path(str(uri).strip('\u202a'))) for i,uri in enumerate(body.query_uris)
-            if check_file(Path(str(uri).strip('\u202a')),file_type='image')]
-        # 使用线程池执行同步函数
+        uris_seq = [(i, uris) for i, uri in enumerate(body.query_uris)
+                    if (uris := Path(str(uri).strip('\u202a'))) and check_file(uris, file_type='image')]
+
         from src.models.Deepmini import evaluate
-        eva_results = evaluate(
+        async for item in evaluate(
             uris_seq,
             tag_language=body.tag_language,
-            is_return_path=False,
-            verbose=False
-        )
-        # 构建响应
-        print(f"Tagger Response at {time.time()}")
-        response = tagger.TaggerResponse(
-            response=[
-                tagger.TagItem(
+            is_return_uri_as_path=False
+        ):
+            await websocket.send_json({
+                "status": "progressing",
+                "progress": item.img_seq[0],
+                "content": tagger.TagItem(
                     img_seq=item.img_seq,
                     img_tags=item.img_tags
-                )
-                for item in eva_results
-            ])
-        await websocket.send_json(response.model_dump())  # 确保发送完成
-        await asyncio.sleep(0.1)                    # 延迟0.1秒后关闭连接
+                ).model_dump()
+            })
+
+        await websocket.send_json({
+            "status": "done",
+            "timestamp": time.time()
+        })
+        await websocket.close()
     except Exception as e:
         try:
             await websocket.send_json({"error": str(e)})
-        except Exception as send_err:
-            print(f"Failed to send error response: {send_err}")
-    finally:
-        await websocket.close()
+        except Exception as e:
+            await websocket.send_json({"error": str(e)})
+            await websocket.close()
 
 router_api = APIRouter(
     prefix="/api",
