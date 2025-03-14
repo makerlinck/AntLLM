@@ -9,6 +9,7 @@ let progress = {
 let chunkSize = 32; // 默认分块大小
 let maxChunkSize = 192; //
 DEFAULT_LANGUAGE = 'en';
+SUPPORTED_EXT = ["png","jpg"]
 
 // ==================== UI 模板 ====================
 const uiTemplate = () => `
@@ -279,10 +280,11 @@ async function processChunk(uris, objs) {
     });
     const { response: results } = await response.json();
 
-    results.forEach((item, index) => {
-      objs[index].tags = item.img_tags;
-      objs[index].save();
-      addLog(`已处理: ${objs[index].name}`);
+    results.forEach((item) => {
+      idx = item.img_seq[0]
+      objs[idx].tags = item.img_tags;
+      objs[idx].save();
+      addLog(`已处理: ${objs[idx].name}`);
     });
   } catch (error) {
     if (error.name !== 'AbortError') throw error;
@@ -306,12 +308,15 @@ function handleCancel() {
 function processItems(items, force) {
   const path = require('path');
   return items.reduce((acc, item) => {
-    if (force || item.tags.length === 0) {
+    const IS_SUPPORTED = SUPPORTED_EXT.includes(item.ext);
+    if ((force || item.tags.length === 0) && IS_SUPPORTED) {
       const posixPath = `${eagle.library.path.split(path.sep).join(path.posix.sep)}/images/${item.id}.info/${item.name}.${item.ext}`;
       acc[0].push(posixPath);
       acc[1].push(item);
+    } else if (!IS_SUPPORTED) {
+      addLog(`跳过: ${item.name} (不支持的类型:${item.ext})`);
     } else {
-      addLog(`跳过: ${item.name} (已有标签)`);
+      addLog(`跳过: ${item.name} (已存在${item.tags.length}个标签)`);
     }
     return acc;
   }, [[], []]);
@@ -332,7 +337,7 @@ function updateUI() {
 function cleanup() {
   isTaggingActive = false;
   abortController = null;
-  setTimeout(updateUI, 1000);
+  setTimeout(updateUI, 2000);
 }
 
 // ==================== 插件初始化 ====================

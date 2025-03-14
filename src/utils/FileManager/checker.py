@@ -48,7 +48,9 @@ def check_file(file_path: Path, file_type: SUPPORTED_TYPES) -> bool:
         valid_types = ', '.join(EXTENSION_MAP.keys())
         print(f"Unsupported file type: {file_type}. Valid options: [{valid_types}]")
         return False
-
+    if file_path.stat().st_size == 0:
+        print(f"Empty file: {file_path}")
+        return False
     # 存在性检查（分离路径检查和文件类型验证）
     if not file_path.exists():
         print(f"Path not found: {file_path}")

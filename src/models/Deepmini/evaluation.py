@@ -39,8 +39,7 @@ def shutdown_pool():
 
 def process_image(params):
     """ 接收图片路径和语言参数 """
-    image_path_str, tag_language = params
-    image_path = Path(image_path_str)
+    idx, image_path, tag_language = params
     lang_tags = get_tags(tag_language)  # 动态获取标签
     img_tags = []
     for tag, score in evaluate_image(
@@ -51,11 +50,11 @@ def process_image(params):
             threshold=THRESHOLD
     ):
         img_tags.append(tag)
-    return image_path, img_tags
+    return idx, image_path, img_tags
 
 
 def evaluate(
-        image_paths: list[str],
+        imgs_seq: list[tuple[int, Path]],
         tag_language: Literal[*SUPPORTED_LANGUAGES],
         is_return_path: bool = False,
         verbose: bool = False
@@ -66,18 +65,16 @@ def evaluate(
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     # 使用全局进程池处理任务
-    params = [(path, tag_language) for path in image_paths]
+    params = [(idx, path, tag_language) for idx, path in imgs_seq]
     results = global_pool.map(process_image, params)  # 非阻塞式调用
 
     for res in results:
         if res is None:
             continue
-        img_path, img_tags = res
+        idx, img_path, img_tags = res
         if not is_return_path:
             img_path = str(img_path)
-        if verbose:
-            print(f"Tags of {img_path}:")
-        yield TagItem(img_path=img_path, img_tags=img_tags)
+        yield TagItem(img_seq=(idx, img_path), img_tags=img_tags)
 
 
 def run_test_evaluation():

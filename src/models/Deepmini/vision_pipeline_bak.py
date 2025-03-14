@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow as tf, tensorflow_io as tfio
 import math, skimage.transform
 # 图像处理业务函数
 def transform_and_pad_image(
@@ -51,15 +51,15 @@ def evaluate_image(
         image_input: Path, model: Any, lang_tags: list[str], zero_tags: list[str], threshold: float,
         normalize: bool = True
 ) -> Iterable[tuple[str, float]]:
+    # print(f"Pipeline: Image of current task is {image_input.as_posix()}\n")
+    image_raw = tf.io.read_file(image_input.as_posix())
     try:
-        image_raw = tf.io.read_file(image_input.as_posix())
         image = tf.io.decode_png(image_raw, channels=3)
-    except tf.errors.InvalidArgumentError as e:
-        print(f"Decode PNG failed: {e}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return None
+    except:
+        print("Failed decode image as png,trying decode as webp")
+        image = tfio.image.decode_webp(image_raw)
+        image = tfio.experimental.color.rgba_to_rgb(image)
+
     width, height = model.input_shape[2], model.input_shape[1]
     image = tf.image.resize(
         image,
