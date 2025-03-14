@@ -1,3 +1,4 @@
+import asyncio
 import time
 from fastapi import APIRouter
 from starlette.websockets import WebSocket
@@ -6,6 +7,7 @@ router_ws = APIRouter(
     prefix="/ws",
     tags=["WS CONNECTION ENTRANCE"],
 )
+
 
 # 图像标签识别API
 @router_ws.websocket("/tagger")
@@ -46,7 +48,7 @@ async def tagging_images(websocket: WebSocket):
         try:
             await websocket.send_json({"error": str(e)})
         except Exception as e:
-            await websocket.send_json({"error": str(e)})
+            print(e)
             await websocket.close()
 
 router_api = APIRouter(
@@ -55,10 +57,10 @@ router_api = APIRouter(
 )
 
 
-@router_api.post("/tag-translator/", response_model=list[str])
+@router_api.post("/tag-translator", response_model=list[str])
 async def translate_tags(body: tagger.TagTranslatorQuery):
     print(body)
 
-@router_api.post("/source/", response_model=tagger.TaggerResponse)
+@router_api.post("/source", response_model=tagger.TaggerResponse)
 async def get_image_source(body: tagger.TagTranslatorQuery):
     print(body)

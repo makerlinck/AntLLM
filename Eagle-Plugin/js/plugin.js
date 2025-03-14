@@ -6,6 +6,8 @@ let progress = {
   total: 0,
   cancelled: false
 };
+let startTime = null; // 任务开始时间戳
+let averageTimePerItem = 0; // 每项平均处理时间（秒）
 let chunkSize = 32; // 默认分块大小
 let maxChunkSize = 192; //
 DEFAULT_LANGUAGE = 'en';
@@ -58,13 +60,14 @@ const uiTemplate = () => `
     ${progress.total > 0 ? `
     <div class="progress-container">
       <div class="progress-bar" style="width: ${Math.round((progress.current / progress.total) * 100)}%"></div>
+
       <div class="progress-text">
         ${progress.current}/${progress.total} (${Math.round((progress.current / progress.total) * 100)}%)
       </div>
     </div>` : ''}
 
     <div class="log-container" id="log">
-      ${progress.total === 0 ? '<div class="empty-state">🖼️ 选择文件后开始智能管理</div>' : ''}
+      ${progress.total === 0 ? '<div class="empty-state">🖼️ 选择文件后开始智能管理</div>' : uiPredictTime()}
     </div>
   </div>
 
@@ -232,9 +235,10 @@ async function handleTagging(force) {
   }
 
   try {
+    startTime = new Date().getTime(); // 记录任务开始时间
     abortController = new AbortController();
     isTaggingActive = true;
-    progress = { current: 0, total: 0, cancelled: false };
+    progress = { current: 0, last_finish: 0, total: 0, cancelled: false };
     updateUI();
 
     const items = await eagle.item.getSelected();
@@ -256,8 +260,9 @@ async function handleTagging(force) {
       const chunkObjs = objs.slice(i, i + chunkSize);
 
       await processChunk(chunkUris, chunkObjs);
-      
+
       progress.current = Math.min(i + chunkSize, uris.length);
+      progress.finished = Math.min(i + chunkSize, uris.length);
       updateUI();
     }
 
@@ -270,6 +275,20 @@ async function handleTagging(force) {
 }
 
 // ==================== 工具函数 ====================
+function uiPredictTime() {
+    let remainingText = '';
+    if (progress.current > 0 && averageTimePerItem > 0) {
+        const remainingItems = progress.total - progress.current;
+        const remainingSeconds = remainingItems * averageTimePerItem;
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = Math.round(remainingSeconds % 60);
+        return ` 剩余时间: ${minutes}分${seconds}秒`;
+    } else {
+        return ' 剩余时间: --';
+    }
+
+    // 其他UI代码...
+}
 async function processChunk(uris, objs) {
   return new Promise((resolve, reject) => {
     const socket = new WebSocket('ws://127.0.0.1:8000/ws/tagger');
@@ -284,8 +303,16 @@ async function processChunk(uris, objs) {
 
       if (data.status === 'progressing') {
         results.push(data.content);
-        if (data.progress >= progress.current) progress.current = data.progress; // 更新进度并防止远程的进程回溯进度
-        updateUI(); // 实时刷新
+        if (progress.finished + data.progress > progress.current) {
+        progress.current = progress.finished + data.progress;
+
+        } // 更新进度并防止远程的进程回溯进度
+
+        // 计算平均时间
+        const currentTime = new Date().getTime();
+        const elapsedSeconds = (currentTime - startTime) / 1000;
+        averageTimePerItem = elapsedSeconds / progress.current;
+        updateUI();
       } else if (data.status === 'done') {
         handleResults(results, objs);
         resolve();
