@@ -272,24 +272,47 @@ async function handleTagging(force) {
 // ==================== 工具函数 ====================
 async function processChunk(uris, objs) {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/tagger', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tag_language: DEFAULT_LANGUAGE,query_uris: uris }),
-      signal: abortController.signal
-    });
-    const { response: results } = await response.json();
+    const socket = new WebSocket('ws://127.0.0.1:8000/ws/tagger'); // WebSocket地址
+    return new Promise((resolve, reject) => {
+      socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+        if (data.error) {
+          reject(new Error(data.error));
+          return;
+        }
 
-    results.forEach((item) => {
-      idx = item.img_seq[0]
-      objs[idx].tags = item.img_tags;
-      objs[idx].save();
-      addLog(`已处理: ${objs[idx].name}`);
+        // 处理返回结果
+        data.response.forEach((item) => {
+          idx = item.img_seq[0]
+          objs[idx].tags = item.img_tags;
+          objs[idx].save();
+          addLog(`已处理: ${objs[idx].name}`);
+        });
+        resolve();
+      });
+
+      socket.addEventListener('open', () => {
+        // 发送请求数据
+        socket.send(JSON.stringify({
+          tag_language: DEFAULT_LANGUAGE,
+          query_uris: uris
+        }));
+      });
+
+      socket.addEventListener('error', (error) => {
+        reject(error);
+      });
+
+      // 取消操作时关闭连接
+      abortController.signal.addEventListener('abort', () => {
+        socket.close();
+      });
     });
   } catch (error) {
     if (error.name !== 'AbortError') throw error;
   }
 }
+
 async function removeTags() {
     const items = await eagle.item.getSelected();
     for(i in items){

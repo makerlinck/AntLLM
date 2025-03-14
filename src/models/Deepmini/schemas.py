@@ -5,7 +5,7 @@ from .data_loader import PACKAGE_PATH
 
 class TagItem(BaseModel):
     """返回数据格式img_path: str | Path, img_tags: list[str]"""
-    img_seq: tuple[int, Path ]  # img sequence number
+    img_seq: tuple[int, str | Path ]  # img sequence number
     img_tags: list[str]  # img tag-list
 
 

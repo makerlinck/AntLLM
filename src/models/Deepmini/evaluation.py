@@ -73,8 +73,12 @@ def evaluate(
             continue
         idx, img_path, img_tags = res
         if not is_return_path:
-            img_path = str(img_path)
-        yield TagItem(img_seq=(idx, img_path), img_tags=img_tags)
+            img_path = str(img_path.as_posix())
+            print(img_path)
+        yield TagItem(
+            img_seq=(idx, img_path),
+            img_tags=img_tags
+        )
 
 
 def run_test_evaluation():
