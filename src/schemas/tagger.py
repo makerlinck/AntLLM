@@ -23,4 +23,3 @@ class TagTranslatorQuery(BaseModel):
 
 class TaggerResponse(BaseModel):
     response: list[TagItem]
-    EOF: bool = False

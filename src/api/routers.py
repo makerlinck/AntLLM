@@ -1,4 +1,3 @@
-import asyncio
 import time
 from fastapi import APIRouter
 from starlette.websockets import WebSocket
@@ -43,13 +42,13 @@ async def tagging_images(websocket: WebSocket):
             "status": "done",
             "timestamp": time.time()
         })
-        await websocket.close()
     except Exception as e:
         try:
             await websocket.send_json({"error": str(e)})
         except Exception as e:
             print(e)
-            await websocket.close()
+    finally:
+        await websocket.close()
 
 router_api = APIRouter(
     prefix="/api",

@@ -59,7 +59,10 @@ $ wget https://github.com/KichangKim/DeepDanbooru/releases/download/v4-20200814-
 ### 基本使用 | Basic Usage
 ``` bash
 -----------------启动服务----------------
-uvicorn main:app --host <IP address> --port <Port>
+Windows:
+  启动以下工作目录内文件: run_server.bat
+Linux:
+  输入以下命令: ./.venv/Scripts/uvicorn.exe src.main:app
 -----------------测试项目----------------
 $ python ./src/test_run_tensorflow.py # 测试tensorflow
 $ python ./src/test_run_deepmini.py   # 测试deepmini

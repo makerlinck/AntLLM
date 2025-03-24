@@ -243,7 +243,7 @@ async function handleTagging(force) {
 
     const items = await eagle.item.getSelected();
     const [uris, objs] = processItems(items, force);
-    
+
     if (uris.length === 0) {
       addLog('没有需要处理的文件');
       return;
@@ -254,7 +254,10 @@ async function handleTagging(force) {
 
     // 使用动态分块大小
     for (let i = 0; i < uris.length; i += chunkSize) {
-      if (progress.cancelled) break;
+      if (progress.cancelled) {
+        addLog('操作已取消');
+        break;
+      }
 
       const chunkUris = uris.slice(i, i + chunkSize);
       const chunkObjs = objs.slice(i, i + chunkSize);
@@ -265,8 +268,8 @@ async function handleTagging(force) {
       progress.finished = Math.min(i + chunkSize, uris.length);
       updateUI();
     }
-
-    addLog(progress.cancelled ? '操作已取消' : '✅ 处理完成');
+    if (progress.cancelled) updateUI();
+    addLog('✅ 处理完成');
   } catch (error) {
     addLog(`❌ Error: ${error.message}`);
   } finally {
@@ -285,10 +288,7 @@ function uiPredictTime() {
         return ` 剩余时间: ${minutes}分${seconds}秒`;
     } else {
         return ' 剩余时间: --';
-    }
-
-    // 其他UI代码...
-}
+}}
 async function processChunk(uris, objs) {
   return new Promise((resolve, reject) => {
     const socket = new WebSocket('ws://127.0.0.1:8000/ws/tagger');
@@ -367,7 +367,7 @@ function handleCancel() {
   if (isTaggingActive) {
     progress.cancelled = true;
     abortController.abort();
-    addLog('正在取消...');
+    addLog('操作取消');
     updateUI();
   }
 }

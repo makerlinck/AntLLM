@@ -1,4 +1,7 @@
+import os
+
 import tensorflow as tf
+tf.config.optimizer.set_jit(True)   # 启用XLA加速
 import math, skimage.transform
 # 图像处理业务函数
 def transform_and_pad_image(
