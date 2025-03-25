@@ -62,7 +62,7 @@ $ wget https://github.com/KichangKim/DeepDanbooru/releases/download/v4-20200814-
 Windows:
   启动以下工作目录内文件: run_server.bat
 Linux:
-  输入以下命令: ./.venv/Scripts/uvicorn.exe src.main:app
+  输入以下命令: pyton3 .venv/Lib/site-packages/uvicorn src.main:app
 -----------------测试项目----------------
 $ python ./src/test_run_tensorflow.py # 测试tensorflow
 $ python ./src/test_run_deepmini.py   # 测试deepmini
